@@ -146,9 +146,9 @@ func max_word(w1 string, c1 int, w2 string, c2 int) (string, int) {
 
 func longest_word(w1 string, c1 int, w2 string, c2 int) (string, int) {
   if len(w1) > len(w2) {
-    return w1, c1
+    return w1, len(w1)
   }
-  return w2, c2
+  return w2, len(w2)
 }
 
 func reducer(functor ReduceFunc, emap EmergingMap, accum_str string, accum_int int, kill chan int) {
