@@ -2,7 +2,7 @@ package main
 
 type addOp struct {
   key string
-  response chan int
+  completed chan int
 }
 
 type askOp struct {
@@ -35,7 +35,7 @@ func (c *ChannelMap) Listen() {
       case add_obj := <- c.add_channel:
           //fmt.Printf("add: %s\n", add_obj)
           c.words[add_obj.key]++
-          add_obj.response <- 1
+          add_obj.completed <- 1
       
       case ask_obj := <- c.ask_channel:
           //fmt.Printf("ask: %s\n", ask_obj)
@@ -62,15 +62,6 @@ func (c *ChannelMap) Stop() {
 }
 
 func (c *ChannelMap) Reduce(functor ReduceFunc, accum_str string, accum_int int) (string, int) {
-	//_ = functor
-	//_ = accum_str
-	//_ = accum_int
-	//return "", 0
-  //for k, v := range c.words {
-    //accum_str, accum_int = functor(accum_str, accum_int, k, v)
-  //}
-  //return accum_str, accum_int
-
   reduce_obj := &reduceOp{
     functr: functor,
     acc_str: accum_str,
@@ -86,19 +77,12 @@ func (c *ChannelMap) Reduce(functor ReduceFunc, accum_str string, accum_int int)
 func (c *ChannelMap) AddWord(word string) {
   add_obj := &addOp{
     key: word, 
-    response: make(chan int)}
+    completed: make(chan int)}
   c.add_channel <- add_obj
-  <- add_obj.response
-  //c.words[word]++
-  //<- c.add_channel
+  <- add_obj.completed
 }
 
 func (c *ChannelMap) GetCount(word string) int {
-  //res := c.words[word]
-  //<- c.ask_channel
-  //return res
-  //return 0
-
   ask_obj := &askOp{
     key: word,
     response: make(chan int)}
@@ -108,7 +92,6 @@ func (c *ChannelMap) GetCount(word string) int {
 }
 
 func NewChannelMap() *ChannelMap {
-	//return &ChannelMap{}
   cm := new(ChannelMap)
   cm.words = make(map[string]int)
   cm.add_channel = make(chan *addOp, ADD_BUFFER_SIZE)
