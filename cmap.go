@@ -47,6 +47,7 @@ func (c *ChannelMap) Listen() {
             reduce_obj.acc_str, reduce_obj.acc_int = reduce_obj.functr(reduce_obj.acc_str, reduce_obj.acc_int, k, v)
           }
           reduce_obj.completed <- 1
+      
       case <- c.stop_channel:
           //fmt.Printf("stop_channel: %d\n", exit)
           close(c.add_channel)
