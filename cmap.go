@@ -10,11 +10,16 @@ type askOp struct {
   response chan int
 }
 
+type result struct {
+  acc_str string
+  acc_int int
+}
+
 type reduceOp struct {
   functr ReduceFunc
   acc_str string
   acc_int int
-  completed chan int
+  completed chan *result
 }
 
 
@@ -26,7 +31,6 @@ type ChannelMap struct {
   ask_channel chan *askOp
   reduce_channel chan *reduceOp
 }
-
 
 func (c *ChannelMap) Listen() {
   for {
@@ -46,10 +50,12 @@ func (c *ChannelMap) Listen() {
           for k, v := range c.words {
             reduce_obj.acc_str, reduce_obj.acc_int = reduce_obj.functr(reduce_obj.acc_str, reduce_obj.acc_int, k, v)
           }
-          reduce_obj.completed <- 1
+          result_obj := &result {
+            acc_str: reduce_obj.acc_str,
+            acc_int: reduce_obj.acc_int}
+          reduce_obj.completed <- result_obj
       
       case <- c.stop_channel:
-          //fmt.Printf("stop_channel: %d\n", exit)
           close(c.add_channel)
           close(c.ask_channel)
           close(c.reduce_channel)
@@ -67,11 +73,14 @@ func (c *ChannelMap) Reduce(functor ReduceFunc, accum_str string, accum_int int)
     functr: functor,
     acc_str: accum_str,
     acc_int: accum_int,
-    completed: make(chan int)}
-  
+    completed: make(chan *result)}
+  //fmt.Printf("Before: acc_int: %d\n", accum_int)
+  //fmt.Printf("Before: acc_str: %s\n", accum_str)
   c.reduce_channel <- reduce_obj
-  <- reduce_obj.completed
-  return reduce_obj.acc_str,reduce_obj.acc_int
+  result_obj := <- reduce_obj.completed
+  //fmt.Printf("After: acc_int: %d\n", result_obj.acc_int)
+  //fmt.Printf("After: acc_str: %s\n", result_obj.acc_str)
+  return result_obj.acc_str,result_obj.acc_int
 
 }
 
