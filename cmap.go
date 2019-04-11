@@ -19,7 +19,7 @@ type reduceOp struct {
   functr ReduceFunc
   acc_str string
   acc_int int
-  completed chan *result
+  response chan *result
 }
 
 
@@ -53,7 +53,7 @@ func (c *ChannelMap) Listen() {
           result_obj := &result {
             acc_str: reduce_obj.acc_str,
             acc_int: reduce_obj.acc_int}
-          reduce_obj.completed <- result_obj
+          reduce_obj.response <- result_obj
       
       case <- c.stop_channel:
           close(c.add_channel)
@@ -73,11 +73,11 @@ func (c *ChannelMap) Reduce(functor ReduceFunc, accum_str string, accum_int int)
     functr: functor,
     acc_str: accum_str,
     acc_int: accum_int,
-    completed: make(chan *result)}
+    response: make(chan *result)}
   //fmt.Printf("Before: acc_int: %d\n", accum_int)
   //fmt.Printf("Before: acc_str: %s\n", accum_str)
   c.reduce_channel <- reduce_obj
-  result_obj := <- reduce_obj.completed
+  result_obj := <- reduce_obj.response
   //fmt.Printf("After: acc_int: %d\n", result_obj.acc_int)
   //fmt.Printf("After: acc_str: %s\n", result_obj.acc_str)
   return result_obj.acc_str,result_obj.acc_int
